@@ -1,21 +1,24 @@
 from pydantic import BaseModel
 from typing import List
 
+
 class UsuarioSchema(BaseModel):
     nome: str
-    email:str
-    senha:str
+    email: str
+    senha: str
     ativo: bool = True
     admin: bool = False
 
     class Config:
         from_attributes = True
-    
+
+
 class PedidoSchema(BaseModel):
     usuario: int
 
     class Config:
         from_attributes = True
+
 
 class LoginSchema(BaseModel):
     email: str
@@ -23,6 +26,7 @@ class LoginSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
 
 class ItemPedidoSchema(BaseModel):
     quantidade: int
@@ -32,13 +36,13 @@ class ItemPedidoSchema(BaseModel):
 
     class Config:
         from_attributes = True
-        
+
+
 class ResponsePedidoSchema(BaseModel):
     id: int
     status: str
     preco: float
     itens: List[ItemPedidoSchema]
-    
+
     class Config:
         from_attributes = True
-

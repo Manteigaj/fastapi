@@ -1,26 +1,35 @@
 from fastapi import Depends, HTTPException
 from models import db
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session as sqlalchemySession
 from models import Usuario
 from jose import jwt, JWTError
 from main import SECRET_KEY, ALGORITHM, oauth2_schema
 
+
+Session = sessionmaker(bind=db)
+
+
 def pegar_sessao():
-    try: 
-        Session = sessionmaker(bind=db)
-        session = Session()
+
+    session = Session()
+    try:
         yield session
     finally:
         session.close()
 
-def verificar_token(token: str = Depends(oauth2_schema), session:Session = Depends(pegar_sessao)):
+
+def verificar_token(
+    token: str = Depends(oauth2_schema),
+    session: sqlalchemySession = Depends(pegar_sessao),
+):
     try:
         dic_info = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        id_usuario = dic_info.get('user_id')
+        id_usuario = dic_info.get("user_id")
     except JWTError:
-        raise HTTPException(status_code=401, detail='Acesso Negado, verifique a validade do token')
-    usuario = session.query(Usuario).filter(Usuario.id==id_usuario).first()
+        raise HTTPException(
+            status_code=401, detail="Acesso Negado, verifique a validade do token"
+        )
+    usuario = session.query(Usuario).filter(Usuario.id == id_usuario).first()
     if not usuario:
-        raise HTTPException(status_code=401, detail='Acesso Inválido')
-    return  usuario
-
+        raise HTTPException(status_code=401, detail="Acesso Inválido")
+    return usuario
