@@ -34,7 +34,7 @@ async def cancelar_pedido(
     pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
     if pedido is None:
         raise HTTPException(status_code=400, detail="pedido não encontrado")
-    if not usuario.admin and usuario.id != pedido.usuario_id:
+    if not usuario.admin and usuario.id != pedido.usuario:
         raise HTTPException(
             status_code=401,
             detail="Você não tem autorização para fazer essa modificação",
@@ -71,7 +71,7 @@ async def adicionar_item_pedido(
     pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
     if pedido is None:
         raise HTTPException(status_code=400, detail="pedido não existente")
-    if not usuario.admin and usuario.id != pedido.usuario_id:
+    if not usuario.admin and usuario.id != pedido.usuario:
         raise HTTPException(
             status_code=401, detail="Você não tem autorização para fazer essa operação"
         )
@@ -104,7 +104,7 @@ async def remover_item_pedido(
     if item_pedido is None:
         raise HTTPException(status_code=400, detail="Pedido não encontrado")
     pedido = session.query(Pedido).filter(Pedido.id == item_pedido.pedido).first()
-    if not usuario.admin and usuario.id != pedido.usuario_id:
+    if not usuario.admin and usuario.id != pedido.usuario:
         raise HTTPException(
             status_code=401, detail="Você não tem autorização para fazer essa operação"
         )
@@ -127,7 +127,7 @@ async def finalizar_pedido(
     pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
     if pedido is None:
         raise HTTPException(status_code=400, detail="pedido não encontrado")
-    if not usuario.admin and usuario.id != pedido.usuario_id:
+    if not usuario.admin and usuario.id != pedido.usuario:
         raise HTTPException(
             status_code=401,
             detail="Você não tem autorização para fazer essa modificação",
@@ -149,7 +149,7 @@ async def visualizar_pedido(
     pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
     if pedido is None:
         raise HTTPException(status_code=400, detail="pedido não encontrado")
-    if not usuario.admin and usuario.id != pedido.usuario_id:
+    if not usuario.admin and usuario.id != pedido.usuario:
         raise HTTPException(
             status_code=401,
             detail="Você não tem autorização para fazer essa modificação",

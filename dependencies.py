@@ -3,7 +3,7 @@ from models import db
 from sqlalchemy.orm import sessionmaker, Session as sqlalchemySession
 from models import Usuario
 from jose import jwt, JWTError
-from main import SECRET_KEY, ALGORITHM, oauth2_schema
+from security import SECRET_KEY, ALGORITHM, oauth2_schema
 
 
 Session = sessionmaker(bind=db)

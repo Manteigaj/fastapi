@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from models import Usuario
 from dependencies import pegar_sessao, verificar_token
-from main import bcrypt_context, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
+from security import bcrypt_context, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, SECRET_KEY
 from schemas import UsuarioSchema, LoginSchema
 from sqlalchemy.orm import Session
 from jose import jwt
@@ -32,7 +32,7 @@ def autenticar_usuario(email, senha, session):
 @auth_router.get("/")
 async def home():
     return {
-        "mesnsagem": "voce acessou a rota padrao de autenticaçao",
+        "mensagem": "voce acessou a rota padrao de autenticaçao",
         "autenticado": False,
     }
 

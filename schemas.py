@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from typing import List
+
+from pydantic import BaseModel, ConfigDict
 
 
 class UsuarioSchema(BaseModel):
@@ -9,23 +10,20 @@ class UsuarioSchema(BaseModel):
     ativo: bool = True
     admin: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PedidoSchema(BaseModel):
     usuario: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LoginSchema(BaseModel):
     email: str
     senha: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ItemPedidoSchema(BaseModel):
@@ -34,8 +32,7 @@ class ItemPedidoSchema(BaseModel):
     tamanho: str
     preco_unitario: float
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ResponsePedidoSchema(BaseModel):
@@ -44,5 +41,4 @@ class ResponsePedidoSchema(BaseModel):
     preco: float
     itens: List[ItemPedidoSchema]
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
