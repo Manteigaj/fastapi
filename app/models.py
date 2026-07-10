@@ -8,8 +8,14 @@ from sqlalchemy import (
     ForeignKey,
 )
 from sqlalchemy.orm import declarative_base, relationship
+from dotenv import load_dotenv
+import os
 
-db = create_engine("sqlite:///banco.db")
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///app.db")
+
+engine = create_engine(DATABASE_URL)
 
 Base = declarative_base()
 

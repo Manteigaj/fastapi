@@ -1,8 +1,8 @@
 from fastapi.testclient import TestClient
 
-from models import Usuario, Pedido, ItensPedido
-from security import bcrypt_context
-from auth_routes import criar_token
+from app.models import Usuario, Pedido, ItensPedido
+from app.security import bcrypt_context
+from app.auth_routes import criar_token
 
 
 def criar_usuario(session, admin=False):

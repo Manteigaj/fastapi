@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-from models import Usuario
-from security import bcrypt_context
+from app.models import Usuario
+from app.security import bcrypt_context
 
 
 def test_home(client: TestClient):
