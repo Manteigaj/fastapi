@@ -1,12 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-from app.dependencies import pegar_sessao, verificar_token
-from app.schemas import PedidoSchema, ItemPedidoSchema, ResponsePedidoSchema
-from app.models import Pedido, Usuario, ItensPedido
 from typing import List
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.dependencies import pegar_sessao, verificar_token
+from app.models import Pedido, Usuario, ItensPedido
+from app.schemas import PedidoSchema, ItemPedidoSchema, ResponsePedidoSchema
+
 order_router = APIRouter(
-    prefix="/pedidos", tags=["pedidos"], dependencies=[Depends(verificar_token)]
+    prefix="/pedidos",
+    tags=["pedidos"],
+    dependencies=[Depends(verificar_token)],
 )
 
 
@@ -17,11 +22,14 @@ async def pedidos():
 
 @order_router.post("/pedidos")
 async def criar_pedido(
-    pedido_schema: PedidoSchema, session: Session = Depends(pegar_sessao)
+    pedido_schema: PedidoSchema,
+    session: Session = Depends(pegar_sessao),
 ):
-    novo_pedido = Pedido(usuario=pedido_schema.usuario)
+    novo_pedido = Pedido(usuario_id=pedido_schema.usuario)
+
     session.add(novo_pedido)
     session.commit()
+
     return {"mensagem": f"Pedido criado com sucesso. ID do Pedido: {novo_pedido.id}"}
 
 
@@ -31,16 +39,20 @@ async def cancelar_pedido(
     session: Session = Depends(pegar_sessao),
     usuario: Usuario = Depends(verificar_token),
 ):
-    pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
+    pedido = session.scalar(select(Pedido).where(Pedido.id == id_pedido))
+
     if pedido is None:
         raise HTTPException(status_code=400, detail="pedido não encontrado")
-    if not usuario.admin and usuario.id != pedido.usuario:
+
+    if not usuario.admin and usuario.id != pedido.usuario_id:
         raise HTTPException(
             status_code=401,
             detail="Você não tem autorização para fazer essa modificação",
         )
+
     pedido.status = "CANCELADO"
     session.commit()
+
     return {
         "mensagem": f"Pedido número: {pedido.id} cancelado com sucesso",
         "pedido": pedido,
@@ -54,11 +66,13 @@ async def listar_pedidos(
 ):
     if not usuario.admin:
         raise HTTPException(
-            status_code=401, detail="Você não tem autorização para acessar essa rota"
+            status_code=401,
+            detail="Você não tem autorização para acessar essa rota",
         )
-    else:
-        pedidos = session.query(Pedido).all()
-        return {"pedidos": pedidos}
+
+    pedidos = session.scalars(select(Pedido)).all()
+
+    return {"pedidos": pedidos}
 
 
 @order_router.post("/pedido/adicionar-item/{id_pedido}")
@@ -68,23 +82,31 @@ async def adicionar_item_pedido(
     session: Session = Depends(pegar_sessao),
     usuario: Usuario = Depends(verificar_token),
 ):
-    pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
+    pedido = session.scalar(select(Pedido).where(Pedido.id == id_pedido))
+
     if pedido is None:
         raise HTTPException(status_code=400, detail="pedido não existente")
-    if not usuario.admin and usuario.id != pedido.usuario:
+
+    if not usuario.admin and usuario.id != pedido.usuario_id:
         raise HTTPException(
-            status_code=401, detail="Você não tem autorização para fazer essa operação"
+            status_code=401,
+            detail="Você não tem autorização para fazer essa operação",
         )
+
     item_pedido = ItensPedido(
-        item_pedido_schema.quantidade,
-        item_pedido_schema.sabor,
-        item_pedido_schema.tamanho,
-        item_pedido_schema.preco_unitario,
-        id_pedido,
+        quantidade=item_pedido_schema.quantidade,
+        sabor=item_pedido_schema.sabor,
+        tamanho=item_pedido_schema.tamanho,
+        preco_unitario=item_pedido_schema.preco_unitario,
+        pedido_id=id_pedido,
     )
+
     session.add(item_pedido)
+
     pedido.calcular_preco()
+
     session.commit()
+
     return {
         "mensagem": "item criado com sucesso",
         "item_id": item_pedido.id,
@@ -98,19 +120,30 @@ async def remover_item_pedido(
     session: Session = Depends(pegar_sessao),
     usuario: Usuario = Depends(verificar_token),
 ):
-    item_pedido = (
-        session.query(ItensPedido).filter(ItensPedido.id == id_item_pedido).first()
+    item_pedido = session.scalar(
+        select(ItensPedido).where(ItensPedido.id == id_item_pedido)
     )
+
     if item_pedido is None:
         raise HTTPException(status_code=400, detail="Pedido não encontrado")
-    pedido = session.query(Pedido).filter(Pedido.id == item_pedido.pedido).first()
-    if not usuario.admin and usuario.id != pedido.usuario:
+
+    pedido = session.scalar(select(Pedido).where(Pedido.id == item_pedido.pedido_id))
+
+    if pedido is None:
+        raise HTTPException(status_code=400, detail="Pedido não encontrado")
+
+    if not usuario.admin and usuario.id != pedido.usuario_id:
         raise HTTPException(
-            status_code=401, detail="Você não tem autorização para fazer essa operação"
+            status_code=401,
+            detail="Você não tem autorização para fazer essa operação",
         )
+
     session.delete(item_pedido)
+
     pedido.calcular_preco()
+
     session.commit()
+
     return {
         "mensagem": "item removido com sucesso",
         "quantidade_itens_pedido": len(pedido.itens),
@@ -124,16 +157,21 @@ async def finalizar_pedido(
     session: Session = Depends(pegar_sessao),
     usuario: Usuario = Depends(verificar_token),
 ):
-    pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
+    pedido = session.scalar(select(Pedido).where(Pedido.id == id_pedido))
+
     if pedido is None:
         raise HTTPException(status_code=400, detail="pedido não encontrado")
-    if not usuario.admin and usuario.id != pedido.usuario:
+
+    if not usuario.admin and usuario.id != pedido.usuario_id:
         raise HTTPException(
             status_code=401,
             detail="Você não tem autorização para fazer essa modificação",
         )
+
     pedido.status = "Finalizado"
+
     session.commit()
+
     return {
         "mensagem": f"Pedido número: {pedido.id} finalizado com sucesso",
         "pedido": pedido,
@@ -146,21 +184,33 @@ async def visualizar_pedido(
     session: Session = Depends(pegar_sessao),
     usuario: Usuario = Depends(verificar_token),
 ):
-    pedido = session.query(Pedido).filter(Pedido.id == id_pedido).first()
+    pedido = session.scalar(select(Pedido).where(Pedido.id == id_pedido))
+
     if pedido is None:
         raise HTTPException(status_code=400, detail="pedido não encontrado")
-    if not usuario.admin and usuario.id != pedido.usuario:
+
+    if not usuario.admin and usuario.id != pedido.usuario_id:
         raise HTTPException(
             status_code=401,
             detail="Você não tem autorização para fazer essa modificação",
         )
-    return {"quantidade de itens": len(pedido.itens), "pedido": pedido}
+
+    return {
+        "quantidade de itens": len(pedido.itens),
+        "pedido": pedido,
+    }
 
 
-@order_router.get("/listar/pedidos-usuario", response_model=List[ResponsePedidoSchema])
+@order_router.get(
+    "/listar/pedidos-usuario",
+    response_model=List[ResponsePedidoSchema],
+)
 async def listar_pedidos_usuario(
     session: Session = Depends(pegar_sessao),
     usuario: Usuario = Depends(verificar_token),
 ):
-    pedidos = session.query(Pedido).filter(Pedido.usuario == usuario.id).all()
+    pedidos = session.scalars(
+        select(Pedido).where(Pedido.usuario_id == usuario.id)
+    ).all()
+
     return pedidos

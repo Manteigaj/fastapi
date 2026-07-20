@@ -51,11 +51,11 @@ def test_login_sucesso(client: TestClient, session):
     senha = bcrypt_context.hash("123456")
 
     usuario = Usuario(
-        "João",
-        "joao@email.com",
-        senha,
-        True,
-        False,
+        nome="João",
+        email="joao@email.com",
+        senha=senha,
+        ativo=True,
+        admin=False,
     )
 
     session.add(usuario)
@@ -96,11 +96,11 @@ def test_login_form(client: TestClient, session):
     senha = bcrypt_context.hash("123456")
 
     usuario = Usuario(
-        "João",
-        "joao@email.com",
-        senha,
-        True,
-        False,
+        nome="João",
+        email="joao@email.com",
+        senha=senha,
+        ativo=True,
+        admin=False,
     )
 
     session.add(usuario)
@@ -126,11 +126,11 @@ def test_refresh_token(client: TestClient, session):
     senha = bcrypt_context.hash("123456")
 
     usuario = Usuario(
-        "João",
-        "joao@email.com",
-        senha,
-        True,
-        False,
+        nome="João",
+        email="joao@email.com",
+        senha=senha,
+        ativo=True,
+        admin=False,
     )
 
     session.add(usuario)

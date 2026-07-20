@@ -1,17 +1,17 @@
 from fastapi.testclient import TestClient
 
+from app.auth_routes import criar_token
 from app.models import Usuario, Pedido, ItensPedido
 from app.security import bcrypt_context
-from app.auth_routes import criar_token
 
 
 def criar_usuario(session, admin=False):
     usuario = Usuario(
-        "João",
-        "joao@email.com",
-        bcrypt_context.hash("123456"),
-        True,
-        admin,
+        nome="João",
+        email="joao@email.com",
+        senha=bcrypt_context.hash("123456"),
+        ativo=True,
+        admin=admin,
     )
 
     session.add(usuario)
@@ -56,7 +56,8 @@ def test_criar_pedido(client, session):
 def test_cancelar_pedido(client, session):
     usuario = criar_usuario(session)
 
-    pedido = Pedido(usuario=usuario.id)
+    pedido = Pedido(usuario_id=usuario.id)
+
     session.add(pedido)
     session.commit()
     session.refresh(pedido)
@@ -85,7 +86,8 @@ def test_cancelar_pedido_inexistente(client, session):
 def test_listar_pedidos_admin(client, session):
     admin = criar_usuario(session, admin=True)
 
-    pedido = Pedido(usuario=admin.id)
+    pedido = Pedido(usuario_id=admin.id)
+
     session.add(pedido)
     session.commit()
 
@@ -112,7 +114,8 @@ def test_listar_pedidos_sem_permissao(client, session):
 def test_adicionar_item(client, session):
     usuario = criar_usuario(session)
 
-    pedido = Pedido(usuario=usuario.id)
+    pedido = Pedido(usuario_id=usuario.id)
+
     session.add(pedido)
     session.commit()
     session.refresh(pedido)
@@ -135,17 +138,18 @@ def test_adicionar_item(client, session):
 def test_remover_item(client, session):
     usuario = criar_usuario(session)
 
-    pedido = Pedido(usuario=usuario.id)
+    pedido = Pedido(usuario_id=usuario.id)
+
     session.add(pedido)
     session.commit()
     session.refresh(pedido)
 
     item = ItensPedido(
-        1,
-        "Calabresa",
-        "Grande",
-        50,
-        pedido.id,
+        quantidade=1,
+        sabor="Calabresa",
+        tamanho="Grande",
+        preco_unitario=50,
+        pedido_id=pedido.id,
     )
 
     session.add(item)
@@ -164,7 +168,8 @@ def test_remover_item(client, session):
 def test_finalizar_pedido(client, session):
     usuario = criar_usuario(session)
 
-    pedido = Pedido(usuario=usuario.id)
+    pedido = Pedido(usuario_id=usuario.id)
+
     session.add(pedido)
     session.commit()
     session.refresh(pedido)
@@ -181,7 +186,8 @@ def test_finalizar_pedido(client, session):
 def test_visualizar_pedido(client, session):
     usuario = criar_usuario(session)
 
-    pedido = Pedido(usuario=usuario.id)
+    pedido = Pedido(usuario_id=usuario.id)
+
     session.add(pedido)
     session.commit()
     session.refresh(pedido)
@@ -198,7 +204,8 @@ def test_visualizar_pedido(client, session):
 def test_listar_pedidos_usuario(client, session):
     usuario = criar_usuario(session)
 
-    pedido = Pedido(usuario=usuario.id)
+    pedido = Pedido(usuario_id=usuario.id)
+
     session.add(pedido)
     session.commit()
 

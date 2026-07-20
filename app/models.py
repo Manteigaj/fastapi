@@ -1,15 +1,10 @@
-from sqlalchemy import (
-    create_engine,
-    Column,
-    String,
-    Integer,
-    Float,
-    Boolean,
-    ForeignKey,
-)
-from sqlalchemy.orm import declarative_base, relationship
-from dotenv import load_dotenv
+from __future__ import annotations
+
 import os
+
+from dotenv import load_dotenv
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, create_engine
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 load_dotenv()
 
@@ -17,58 +12,64 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///app.db")
 
 engine = create_engine(DATABASE_URL)
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    pass
 
 
 class Usuario(Base):
     __tablename__ = "usuarios"
 
-    id = Column("id", Integer, primary_key=True, autoincrement=True)
-    nome = Column("nome", String)
-    email = Column("email", String, nullable=False)
-    senha = Column("senha", String)
-    ativo = Column("ativo", Boolean)
-    admin = Column("admin", Boolean, default=False)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    nome: Mapped[str] = mapped_column(String(100))
+    email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
+    senha: Mapped[str] = mapped_column(String(255))
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+    admin: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    def __init__(self, nome, email, senha, ativo=True, admin=False):
-        self.nome = nome
-        self.email = email
-        self.senha = senha
-        self.ativo = ativo
-        self.admin = admin
+    pedidos: Mapped[list["Pedido"]] = relationship(
+        back_populates="usuario",
+        cascade="all, delete-orphan",
+    )
 
 
 class Pedido(Base):
     __tablename__ = "pedidos"
 
-    id = Column("id", Integer, primary_key=True, autoincrement=True)
-    status = Column("status", String)
-    usuario = Column("usuario", ForeignKey("usuarios.id"))
-    preco = Column("preco", Float)
-    itens = relationship("ItensPedido", cascade="all, delete")
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    status: Mapped[str] = mapped_column(String(50), default="PENDENTE")
+    preco: Mapped[float] = mapped_column(Float, default=0)
 
-    def __init__(self, usuario, status="PENDENTE", preco=0):
-        self.usuario = usuario
-        self.status = status
-        self.preco = preco
+    usuario_id: Mapped[int] = mapped_column(
+        ForeignKey("usuarios.id"),
+    )
 
-    def calcular_preco(self):
+    usuario: Mapped["Usuario"] = relationship(
+        back_populates="pedidos",
+    )
+
+    itens: Mapped[list["ItensPedido"]] = relationship(
+        back_populates="pedido",
+        cascade="all, delete-orphan",
+    )
+
+    def calcular_preco(self) -> None:
         self.preco = sum(item.preco_unitario * item.quantidade for item in self.itens)
 
 
 class ItensPedido(Base):
     __tablename__ = "itens_pedido"
 
-    id = Column("id", Integer, primary_key=True, autoincrement=True)
-    quantidade = Column("quantidade", Integer)
-    sabor = Column("sabor", String)
-    tamanho = Column("tamanho", String)
-    preco_unitario = Column("preco_unitario", Float)
-    pedido = Column("pedido", ForeignKey("pedidos.id"))
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    quantidade: Mapped[int] = mapped_column(Integer)
+    sabor: Mapped[str] = mapped_column(String(100))
+    tamanho: Mapped[str] = mapped_column(String(30))
+    preco_unitario: Mapped[float] = mapped_column(Float)
 
-    def __init__(self, quantidade, sabor, tamanho, preco_unitario, pedido):
-        self.quantidade = quantidade
-        self.sabor = sabor
-        self.tamanho = tamanho
-        self.preco_unitario = preco_unitario
-        self.pedido = pedido
+    pedido_id: Mapped[int] = mapped_column(
+        ForeignKey("pedidos.id"),
+    )
+
+    pedido: Mapped["Pedido"] = relationship(
+        back_populates="itens",
+    )
